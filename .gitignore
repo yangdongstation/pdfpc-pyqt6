@@ -35,3 +35,4 @@ env/
 .cache/
 pdfpc_pyqt6/__pycache__/
 pdfpc_pyqt6/**/__pycache__/
+pdfpc-pyqt6-linux-x86_64.tar.gz
