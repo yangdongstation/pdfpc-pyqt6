@@ -5,16 +5,21 @@ Overview view with thumbnail grid for quick navigation
 import logging
 from typing import Dict, Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import (
-    QWidget, QScrollArea, QGridLayout, QFrame, QVBoxLayout, QLabel
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import Signal as pyqtSignal
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QLabel,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
 )
 
-from ..core.state_manager import AppState
-from ..core.pdf_processor import PDFProcessor
 from ..config import config
-
+from ..core.pdf_processor import PDFProcessor
+from ..core.state_manager import AppState
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +41,7 @@ class ThumbnailWidget(QFrame):
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.image_label.setMinimumSize(
-            config.THUMBNAIL_SIZE_WIDTH,
-            config.THUMBNAIL_SIZE_HEIGHT
+            config.THUMBNAIL_SIZE_WIDTH, config.THUMBNAIL_SIZE_HEIGHT
         )
         self.image_label.setText(f"Page {page_idx + 1}")
         self.image_label.setStyleSheet("""
@@ -77,8 +81,7 @@ class ThumbnailWidget(QFrame):
 
         # Scale to thumbnail size
         scaled = pixmap.scaledToWidth(
-            config.THUMBNAIL_SIZE_WIDTH,
-            Qt.TransformationMode.SmoothTransformation
+            config.THUMBNAIL_SIZE_WIDTH, Qt.TransformationMode.SmoothTransformation
         )
         self.image_label.setPixmap(scaled)
 
@@ -88,7 +91,7 @@ class ThumbnailWidget(QFrame):
 
     def _on_current_page_changed(self, current_page: int) -> None:
         """Update highlighting when current page changes"""
-        is_current = (current_page == self.page_idx)
+        is_current = current_page == self.page_idx
         if is_current != self.is_current:
             self.is_current = is_current
             if is_current:

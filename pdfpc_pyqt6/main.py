@@ -2,18 +2,16 @@
 Main entry point for PDF Presenter Console application
 """
 
-import sys
 import logging
+import sys
 
-from PyQt6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 
-from pdfpc_pyqt6.ui.main_window import MainWindow
-
+from .ui.main_window import MainWindow
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +27,3 @@ def main():
 
     logger.info("Application started")
     sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()

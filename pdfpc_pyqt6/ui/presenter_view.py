@@ -6,13 +6,13 @@ Left: Speaker notes | Center: Current slide | Right: Next slide
 import logging
 from typing import Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
+from PySide6.QtCore import Qt
+from PySide6.QtCore import Signal as pyqtSignal
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 
-from ..core.state_manager import AppState
 from ..core.pdf_processor import PDFProcessor
+from ..core.state_manager import AppState
 from .widgets.page_display import PageDisplay
-
 
 logger = logging.getLogger(__name__)
 

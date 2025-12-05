@@ -2,8 +2,11 @@
 Global application state management using Qt signals
 """
 
-from PyQt6.QtCore import QObject, pyqtSignal, pyqtProperty
 from typing import Dict, Optional
+
+from PySide6.QtCore import Property as pyqtProperty
+from PySide6.QtCore import QObject
+from PySide6.QtCore import Signal as pyqtSignal
 
 
 class AppState(QObject):
@@ -15,7 +18,7 @@ class AppState(QObject):
     # Signals for state changes
     currentPageChanged = pyqtSignal(int)  # Emitted when current page changes
     totalPagesChanged = pyqtSignal(int)  # Emitted when PDF page count is set
-    viewModeChanged = pyqtSignal(str)    # Emitted when view mode switches
+    viewModeChanged = pyqtSignal(str)  # Emitted when view mode switches
     pageImagesUpdated = pyqtSignal(int, str)  # (page_idx, image_path)
     projectorStatusChanged = pyqtSignal(bool)  # (is_open)
     pdfLoadingStarted = pyqtSignal()

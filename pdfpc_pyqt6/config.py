@@ -2,9 +2,10 @@
 Configuration constants for PDF Presenter Console
 """
 
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Dict
+
 
 @dataclass
 class Config:

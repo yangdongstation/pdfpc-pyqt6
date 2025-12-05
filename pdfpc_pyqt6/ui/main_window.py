@@ -5,22 +5,27 @@ Main application window
 import logging
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QStackedWidget, QLabel,
-    QFileDialog, QMessageBox, QProgressDialog
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QProgressDialog,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt6.QtGui import QKeySequence, QShortcut
 
-from ..core.state_manager import AppState
-from ..core.pdf_processor import PDFProcessor
-from ..core.threading_manager import RenderThreadPool
 from ..config import config
-from .widgets.page_display import PageDisplay
-from .presenter_view import PresenterView
+from ..core.pdf_processor import PDFProcessor
+from ..core.state_manager import AppState
+from ..core.threading_manager import RenderThreadPool
 from .overview_view import OverviewView
+from .presenter_view import PresenterView
 from .projector_window import ProjectorWindow
-
+from .widgets.page_display import PageDisplay
 
 logger = logging.getLogger(__name__)
 
@@ -33,15 +38,15 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("PDF Presenter Console")
-        self.setGeometry(100, 100, config.DEFAULT_WINDOW_WIDTH, config.DEFAULT_WINDOW_HEIGHT)
+        self.setGeometry(
+            100, 100, config.DEFAULT_WINDOW_WIDTH, config.DEFAULT_WINDOW_HEIGHT
+        )
 
         # Core components
         self.state = AppState()
         self.pdf_processor = PDFProcessor()
         self.render_thread_pool = RenderThreadPool(
-            self.pdf_processor,
-            self.state,
-            max_threads=config.MAX_RENDER_THREADS
+            self.pdf_processor, self.state, max_threads=config.MAX_RENDER_THREADS
         )
 
         # UI setup
@@ -125,10 +130,7 @@ class MainWindow(QMainWindow):
     def open_pdf(self) -> None:
         """Open a PDF file dialog"""
         file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Open PDF File",
-            "",
-            "PDF Files (*.pdf);;All Files (*)"
+            self, "Open PDF File", "", "PDF Files (*.pdf);;All Files (*)"
         )
 
         if not file_path:
@@ -183,7 +185,10 @@ class MainWindow(QMainWindow):
 
     def next_page(self) -> None:
         """Move to next page"""
-        if self.state.is_pdf_loaded and self.state.current_page < self.state.total_pages - 1:
+        if (
+            self.state.is_pdf_loaded
+            and self.state.current_page < self.state.total_pages - 1
+        ):
             self.state.next_page()
             # Prioritize rendering nearby pages
             self.render_thread_pool.render_priority_pages(self.state.current_page)
@@ -263,7 +268,7 @@ class MainWindow(QMainWindow):
     def open_projector(self) -> None:
         """Open projector window on secondary display"""
         try:
-            from PyQt6.QtWidgets import QApplication
+            from PySide6.QtWidgets import QApplication
 
             projector = ProjectorWindow(self.state, self.pdf_processor, self)
             self.state.set_projector_window(projector)
@@ -280,7 +285,9 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             logger.error(f"Failed to open projector: {e}")
-            QMessageBox.critical(self, "Projector Error", f"Failed to open projector: {e}")
+            QMessageBox.critical(
+                self, "Projector Error", f"Failed to open projector: {e}"
+            )
 
     def close_projector(self) -> None:
         """Close projector window"""

@@ -6,12 +6,12 @@ import logging
 from collections import deque
 from typing import List, Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal, QRunnable, QThreadPool
+from PySide6.QtCore import QObject, QRunnable, QThreadPool
+from PySide6.QtCore import Signal as pyqtSignal
 
+from ..config import config
 from .pdf_processor import PDFProcessor
 from .state_manager import AppState
-from ..config import config
-
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,13 @@ class PDFRenderWorker(QRunnable):
     Uses callbacks instead of signals to avoid QObject thread affinity issues.
     """
 
-    def __init__(self, pdf_processor: PDFProcessor, page_indices: List[int],
-                 on_finished_callback=None, on_error_callback=None):
+    def __init__(
+        self,
+        pdf_processor: PDFProcessor,
+        page_indices: List[int],
+        on_finished_callback=None,
+        on_error_callback=None,
+    ):
         super().__init__()
         self.pdf_processor = pdf_processor
         self.page_indices = page_indices
@@ -47,7 +52,9 @@ class PDFRenderWorker(QRunnable):
                     if self.on_error_callback:
                         self.on_error_callback(page_idx, "Failed to render page")
             except Exception as e:
-                logger.error(f"Worker error rendering page {page_idx}: {e}", exc_info=True)
+                logger.error(
+                    f"Worker error rendering page {page_idx}: {e}", exc_info=True
+                )
                 if self.on_error_callback:
                     self.on_error_callback(page_idx, str(e))
         logger.info(f"PDFRenderWorker.run() completed for pages: {self.page_indices}")
@@ -62,7 +69,9 @@ class RenderThreadPool(QObject):
     renderError = pyqtSignal(int, str)  # (page_idx, error_message)
     renderProgress = pyqtSignal(int, int)  # (completed, total)
 
-    def __init__(self, pdf_processor: PDFProcessor, state: AppState, max_threads: int = 4):
+    def __init__(
+        self, pdf_processor: PDFProcessor, state: AppState, max_threads: int = 4
+    ):
         super().__init__()
         self.pdf_processor = pdf_processor
         self.state = state
@@ -85,7 +94,9 @@ class RenderThreadPool(QObject):
         3. All other pages (lowest priority)
         """
         logger.info(f"render_priority_pages called with current_page={current_page}")
-        logger.debug(f"total_pages={self.total_pages}, already_rendered={len(self.rendered_pages)}")
+        logger.debug(
+            f"total_pages={self.total_pages}, already_rendered={len(self.rendered_pages)}"
+        )
 
         if self.total_pages <= 0:
             logger.warning("total_pages <= 0, skipping render")
@@ -103,18 +114,21 @@ class RenderThreadPool(QObject):
         # Medium priority: adjacent pages
         for offset in [-3, -2, -1, 2, 3]:
             page_idx = current_page + offset
-            if (0 <= page_idx < self.total_pages and
-                page_idx not in priority_queue and
-                page_idx not in self.rendered_pages):
+            if (
+                0 <= page_idx < self.total_pages
+                and page_idx not in priority_queue
+                and page_idx not in self.rendered_pages
+            ):
                 priority_queue.append(page_idx)
 
         # Low priority: remaining pages
         for page_idx in range(self.total_pages):
-            if (page_idx not in priority_queue and
-                page_idx not in self.rendered_pages):
+            if page_idx not in priority_queue and page_idx not in self.rendered_pages:
                 priority_queue.append(page_idx)
 
-        logger.info(f"Priority queue built with {len(priority_queue)} pages: {priority_queue[:10]}...")
+        logger.info(
+            f"Priority queue built with {len(priority_queue)} pages: {priority_queue[:10]}..."
+        )
         # Submit render tasks
         self._submit_render_tasks(priority_queue)
 
@@ -123,8 +137,9 @@ class RenderThreadPool(QObject):
         if self.total_pages <= 0:
             return
 
-        page_indices = [i for i in range(self.total_pages)
-                       if i not in self.rendered_pages]
+        page_indices = [
+            i for i in range(self.total_pages) if i not in self.rendered_pages
+        ]
         self._submit_render_tasks(page_indices)
 
     def _submit_render_tasks(self, page_indices: List[int]) -> None:
@@ -133,12 +148,16 @@ class RenderThreadPool(QObject):
             logger.info("No pages to render")
             return
 
-        logger.info(f"_submit_render_tasks called with {len(page_indices)} pages: {page_indices}")
+        logger.info(
+            f"_submit_render_tasks called with {len(page_indices)} pages: {page_indices}"
+        )
 
         # Split into batches to avoid too many workers
         batch_size = max(1, len(page_indices) // self.max_threads)
-        batches = [page_indices[i:i + batch_size]
-                  for i in range(0, len(page_indices), batch_size)]
+        batches = [
+            page_indices[i : i + batch_size]
+            for i in range(0, len(page_indices), batch_size)
+        ]
 
         logger.info(f"Split into {len(batches)} batches (batch_size={batch_size})")
 
@@ -148,7 +167,7 @@ class RenderThreadPool(QObject):
                 self.pdf_processor,
                 batch,
                 on_finished_callback=self._on_render_finished,
-                on_error_callback=self._on_render_error
+                on_error_callback=self._on_render_error,
             )
             logger.info(f"Callbacks registered, starting worker for batch {batch_idx}")
             self.thread_pool.start(worker)
@@ -157,9 +176,13 @@ class RenderThreadPool(QObject):
 
     def _on_render_finished(self, page_idx: int, image_path: str) -> None:
         """Handle successful render"""
-        logger.info(f"_on_render_finished called: page_idx={page_idx}, image_path={image_path}")
+        logger.info(
+            f"_on_render_finished called: page_idx={page_idx}, image_path={image_path}"
+        )
         self.rendered_pages.add(page_idx)
-        logger.debug(f"Added page {page_idx} to rendered_pages, now: {self.rendered_pages}")
+        logger.debug(
+            f"Added page {page_idx} to rendered_pages, now: {self.rendered_pages}"
+        )
         self.state.set_page_image(page_idx, image_path)
         self.renderFinished.emit(page_idx, image_path)
 

@@ -4,14 +4,14 @@ Fullscreen projector window for external display
 
 import logging
 
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer
-from PyQt6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel
-from PyQt6.QtGui import QKeySequence, QShortcut
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Signal as pyqtSignal
+from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtWidgets import QLabel, QMainWindow, QVBoxLayout, QWidget
 
-from ..core.state_manager import AppState
 from ..core.pdf_processor import PDFProcessor
+from ..core.state_manager import AppState
 from .widgets.page_display import PageDisplay
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,9 @@ class ProjectorWindow(QMainWindow):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         # Remove window decorations for cleaner presentation (after setup)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowFlags(
+            Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
+        )
 
     def _setup_ui(self) -> None:
         """Setup the projector window UI"""
@@ -109,7 +111,9 @@ class ProjectorWindow(QMainWindow):
     def _init_display(self) -> None:
         """Initialize the display with the current page (called asynchronously)"""
         try:
-            logger.info(f"Initializing projector display with page {self.state.current_page}")
+            logger.info(
+                f"Initializing projector display with page {self.state.current_page}"
+            )
             self._update_display(self.state.current_page)
         except Exception as e:
             logger.error(f"Error initializing projector display: {e}", exc_info=True)
@@ -119,13 +123,15 @@ class ProjectorWindow(QMainWindow):
         Show projector window on specified screen.
         screen_index: 0 = main screen, 1 = secondary screen, etc.
         """
-        from PyQt6.QtWidgets import QApplication
+        from PySide6.QtWidgets import QApplication
 
         screens = QApplication.screens()
         if 0 <= screen_index < len(screens):
             screen = screens[screen_index]
             self.setGeometry(screen.geometry())
-            logger.info(f"Showing projector on screen {screen_index}: {screen.geometry()}")
+            logger.info(
+                f"Showing projector on screen {screen_index}: {screen.geometry()}"
+            )
         else:
             logger.warning(f"Screen {screen_index} not available, using screen 0")
             if screens:
@@ -144,7 +150,9 @@ class ProjectorWindow(QMainWindow):
         QTimer.singleShot(150, self.setFocus)
 
         # Initialize display with current page asynchronously to avoid blocking the event loop
-        logger.info(f"Scheduling projector display initialization with page {self.state.current_page}")
+        logger.info(
+            f"Scheduling projector display initialization with page {self.state.current_page}"
+        )
         QTimer.singleShot(200, lambda: self._init_display())
 
     def keyPressEvent(self, event) -> None:

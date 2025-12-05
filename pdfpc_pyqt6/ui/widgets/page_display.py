@@ -5,9 +5,10 @@ Page display widget for showing PDF pages
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QRect, QSize, pyqtSignal
-from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout
+from PySide6.QtCore import QRect, QSize, Qt
+from PySide6.QtCore import Signal as pyqtSignal
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 
 class PageDisplay(QWidget):
@@ -95,7 +96,7 @@ class PageDisplay(QWidget):
                 int(left_ratio * w),
                 int(top_ratio * h),
                 int(width_ratio * w),
-                int(height_ratio * h)
+                int(height_ratio * h),
             )
 
             cropped = pixmap.copy(rect)
@@ -115,8 +116,7 @@ class PageDisplay(QWidget):
         label_size = self.image_label.size()
         if label_size.width() > 0 and label_size.height() > 0:
             scaled = self.current_pixmap.scaledToWidth(
-                label_size.width(),
-                Qt.TransformationMode.SmoothTransformation
+                label_size.width(), Qt.TransformationMode.SmoothTransformation
             )
             self.image_label.setPixmap(scaled)
 

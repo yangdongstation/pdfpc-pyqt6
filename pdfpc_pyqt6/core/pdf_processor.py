@@ -7,10 +7,10 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject
+from PySide6.QtCore import Signal as pyqtSignal
 
 from ..config import config
-
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,10 @@ class PDFProcessor(QObject):
         Returns True if successful, False otherwise.
         """
         try:
-            import fitz  # PyMuPDF
+            try:
+                import fitz  # PyMuPDF
+            except ModuleNotFoundError:
+                import fitz_old as fitz
 
             pdf_path = Path(pdf_path)
             if not pdf_path.exists():
@@ -58,7 +61,9 @@ class PDFProcessor(QObject):
             return True
 
         except ImportError:
-            logger.error("PyMuPDF (fitz) not installed. Install with: pip install PyMuPDF")
+            logger.error(
+                "PyMuPDF (fitz) not installed. Install with: pip install PyMuPDF"
+            )
             self.renderError.emit("PyMuPDF not available. Install: pip install PyMuPDF")
             return False
         except Exception as e:
@@ -70,7 +75,9 @@ class PDFProcessor(QObject):
         """Get the number of pages in the loaded PDF"""
         return self._page_count
 
-    def render_page(self, page_index: int, scale: Optional[float] = None) -> Optional[str]:
+    def render_page(
+        self, page_index: int, scale: Optional[float] = None
+    ) -> Optional[str]:
         """
         Render a single page to PNG image.
         Returns the path to the cached PNG file, or None if rendering failed.
@@ -82,11 +89,16 @@ class PDFProcessor(QObject):
             return None
 
         if page_index < 0 or page_index >= self._page_count:
-            logger.error(f"Invalid page index: {page_index} (page_count={self._page_count})")
+            logger.error(
+                f"Invalid page index: {page_index} (page_count={self._page_count})"
+            )
             return None
 
         try:
-            import fitz
+            try:
+                import fitz  # PyMuPDF
+            except ModuleNotFoundError:
+                import fitz_old as fitz
 
             # Use provided scale or default
             if scale is None:
@@ -123,7 +135,9 @@ class PDFProcessor(QObject):
             # Verify file exists
             if cache_path.exists():
                 file_size = cache_path.stat().st_size
-                logger.info(f"Rendered page {page_index} to {cache_path} ({file_size} bytes)")
+                logger.info(
+                    f"Rendered page {page_index} to {cache_path} ({file_size} bytes)"
+                )
                 return str(cache_path)
             else:
                 logger.error(f"File not created after save: {cache_path}")
@@ -134,7 +148,9 @@ class PDFProcessor(QObject):
             self.renderError.emit(f"Failed to render page {page_index}: {e}")
             return None
 
-    def render_page_to_bytes(self, page_index: int, scale: Optional[float] = None) -> Optional[bytes]:
+    def render_page_to_bytes(
+        self, page_index: int, scale: Optional[float] = None
+    ) -> Optional[bytes]:
         """
         Render a page directly to PNG bytes without saving to disk.
         Useful for immediate display without caching.
@@ -148,7 +164,10 @@ class PDFProcessor(QObject):
             return None
 
         try:
-            import fitz
+            try:
+                import fitz  # PyMuPDF
+            except ModuleNotFoundError:
+                import fitz_old as fitz
 
             if scale is None:
                 scale = self._scale
@@ -176,6 +195,7 @@ class PDFProcessor(QObject):
         """Clear the image cache"""
         try:
             import shutil
+
             if self._cache_dir.exists():
                 shutil.rmtree(self._cache_dir)
                 self._cache_dir.mkdir(parents=True, exist_ok=True)
