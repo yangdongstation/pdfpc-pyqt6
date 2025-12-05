@@ -5,7 +5,7 @@ Page display widget for showing PDF pages
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import Qt, QRect, QSize
+from PyQt6.QtCore import Qt, QRect, QSize, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QLabel, QWidget, QVBoxLayout
 
@@ -14,6 +14,10 @@ class PageDisplay(QWidget):
     """
     Widget for displaying a single PDF page image with proper scaling
     """
+
+    # Signals for mouse clicks (left half = previous page, right half = next page)
+    leftClicked = pyqtSignal()  # Left half clicked
+    rightClicked = pyqtSignal()  # Right half clicked
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -120,6 +124,17 @@ class PageDisplay(QWidget):
         """Update image when widget is resized"""
         super().resizeEvent(event)
         self._update_display()
+
+    def mousePressEvent(self, event) -> None:
+        """Handle mouse clicks on the page display"""
+        if event.button() == Qt.MouseButton.LeftButton:
+            # Determine which half was clicked
+            width = self.width()
+            if event.x() < width / 2:
+                self.leftClicked.emit()
+            else:
+                self.rightClicked.emit()
+        super().mousePressEvent(event)
 
     def clear(self) -> None:
         """Clear the displayed image"""
