@@ -130,7 +130,8 @@ class PageDisplay(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             # Determine which half was clicked
             width = self.width()
-            if event.x() < width / 2:
+            # In PyQt6, use position().x() instead of x()
+            if event.position().x() < width / 2:
                 self.leftClicked.emit()
             else:
                 self.rightClicked.emit()
