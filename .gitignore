@@ -1,0 +1,37 @@
+# Build artifacts
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+venv/
+env/
+.env
+
+# Cache
+*.cache
+.cache/
+pdfpc_pyqt6/__pycache__/
+pdfpc_pyqt6/**/__pycache__/
