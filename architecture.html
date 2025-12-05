@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Presenter Console - PyQt6 架构文档</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+        .highlight {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin: 20px 0;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .diagram {
+            background-color: #fafafa;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .component {
+            background-color: #ecf0f1;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .signal {
+            color: #e74c3c;
+            font-style: italic;
+        }
+        .flow {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .flow-arrow {
+            margin: 0 15px;
+            font-size: 20px;
+            color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PDF Presenter Console - PyQt6 架构文档</h1>
+
+        <div class="highlight">
+            <strong>项目概述：</strong>基于 PyQt6 的 PDF 演示控制台应用程序，支持演讲者视图、概览模式和投影仪输出。
+        </div>
+
+        <h2>1. 项目结构</h2>
+        <div class="code-block">
+pdfpc-pyqt6/
+├── pdfpc_pyqt6/
+│   ├── core/                    # 核心模块
+│   │   ├── pdf_processor.py     # PDF 处理和渲染
+│   │   ├── state_manager.py     # 全局状态管理
+│   │   └── threading_manager.py # 线程池管理
+│   ├── ui/                      # 用户界面
+│   │   ├── main_window.py       # 主窗口
+│   │   ├── presenter_view.py    # 演讲者视图
+│   │   ├── overview_view.py     # 概览视图
+│   │   ├── projector_window.py  # 投影仪窗口
+│   │   └── widgets/             # UI 组件
+│   │       └── page_display.py  # 页面显示组件
+│   ├── utils/                   # 工具模块
+│   │   ├── image_cache.py       # 图片缓存
+│   │   └── keyboard_handler.py  # 键盘处理
+│   └── config.py                # 配置文件
+├── tests/                       # 测试文件
+├── requirements.txt             # 依赖列表
+└── setup.py                    # 安装配置
+        </div>
+
+        <h2>2. 核心架构组件</h2>
+
+        <h3>2.1 状态管理 (AppState)</h3>
+        <p>应用程序使用基于 Qt 信号/槽的<strong>信号驱动架构</strong>：</p>
+
+        <div class="diagram">
+AppState (QObject)
+├── 属性:
+│   ├── current_page: int        # 当前页面
+│   ├── total_pages: int         # 总页数
+│   ├── view_mode: str           # 视图模式 (OVERVIEW/PRESENTER)
+│   └── doc_images: Dict         # 页面图片缓存
+│
+├── 信号:
+│   ├── <span class="signal">currentPageChanged</span>
+│   ├── <span class="signal">totalPagesChanged</span>
+│   ├── <span class="signal">viewModeChanged</span>
+│   ├── <span class="signal">pageImagesUpdated</span>
+│   └── <span class="signal">projectorStatusChanged</span>
+│
+└── 所有 UI 窗口订阅这些信号
+    └── 状态变化时自动更新 UI
+        </div>
+
+        <div class="highlight">
+            <strong>优点：</strong>
+            <ul>
+                <li>所有窗口自动保持同步</li>
+                <li>组件间无需手动通信代码</li>
+                <li>易于独立测试各个组件</li>
+                <li>清晰的关注点分离</li>
+            </ul>
+        </div>
+
+        <h3>2.2 PDF 处理器 (PDFProcessor)</h3>
+        <p>负责 PDF 文件的加载和页面渲染：</p>
+        <ul>
+            <li>使用 PyMuPDF (fitz) 进行 PDF 解析</li>
+            <li>将 PDF 页面渲染为图像</li>
+            <li>支持智能缓存机制</li>
+            <li>异步渲染支持</li>
+        </ul>
+
+        <h3>2.3 线程管理器 (RenderThreadPool)</h3>
+        <p>管理后台 PDF 渲染线程：</p>
+        <div class="flow">
+            <div class="component">主线程 (UI)</div>
+            <div class="flow-arrow">→</div>
+            <div class="component">RenderThreadPool</div>
+            <div class="flow-arrow">→</div>
+            <div class="component">工作线程 (渲染)</div>
+        </div>
+
+        <h2>3. 渲染流程</h2>
+
+        <div class="diagram">
+1. 用户打开 PDF
+   ↓
+2. PDFProcessor.load_pdf()
+   ↓
+3. State 发出 totalPagesChanged 信号
+   ↓
+4. RenderThreadPool.render_priority_pages()
+   ↓
+5. 后台渲染页面：
+   - 当前页面（最高优先级）
+   - 相邻页面（±3）
+   - 所有其他页面
+   ↓
+6. 页面渲染完成 → renderFinished 信号
+   ↓
+7. 信号处理器 → AppState.set_page_image()
+   ↓
+8. 所有订阅的 UI 视图自动更新
+        </div>
+
+        <h2>4. 用户界面组件</h2>
+
+        <h3>4.1 主窗口 (MainWindow)</h3>
+        <p>应用程序的主入口，集成所有功能：</p>
+        <ul>
+            <li>管理文件操作（打开 PDF）</li>
+            <li>协调各个视图的切换</li>
+            <li>处理键盘快捷键</li>
+            <li>管理投影仪窗口</li>
+        </ul>
+
+        <h3>4.2 视图模式</h3>
+
+        <h4>演示者视图 (PresenterView)</h4>
+        <p>三栏布局设计：</p>
+        <div class="diagram">
+┌─────────────┬─────────────┬─────────────┐
+│             │             │             │
+│  演讲者备注  │   当前幻灯片 │   下一页预览 │
+│  (左半页)   │   (完整页)  │  (左半页)   │
+│             │             │             │
+└─────────────┴─────────────┴─────────────┘
+        </div>
+
+        <h4>概览视图 (OverviewView)</h4>
+        <p>缩略图网格视图，支持快速导航：</p>
+        <ul>
+            <li>显示所有页面的缩略图</li>
+            <li>点击缩略图跳转到对应页面</li>
+            <li>当前页面高亮显示</li>
+        </ul>
+
+        <h4>投影仪窗口 (ProjectorWindow)</h4>
+        <p>全屏显示当前幻灯片：</p>
+        <ul>
+            <li>独立窗口，可拖到第二显示器</li>
+            <li>仅显示当前页面（完整页面）</li>
+            <li>支持鼠标点击翻页</li>
+            <li>ESC 键关闭窗口</li>
+        </ul>
+
+        <h2>5. 关键特性</h2>
+
+        <h3>5.1 多线程渲染</h3>
+        <ul>
+            <li><strong>主线程：</strong>UI 事件循环 (Qt)</li>
+            <li><strong>工作线程：</strong>PDF 页面渲染 (QThreadPool)</li>
+            <li><strong>通信：</strong>Qt 信号（线程安全）</li>
+        </ul>
+
+        <h3>5.2 智能缓存</h3>
+        <ul>
+            <li>渲染后的页面图像自动缓存</li>
+            <li>LRU 淘汰策略</li>
+            <li>内存和磁盘双重缓存</li>
+        </ul>
+
+        <h3>5.3 键盘导航</h3>
+        <div class="code-block">
+快捷键映射：
+- ←/→   : 上一页/下一页
+- 空格   : 下一页
+- ESC    : 关闭投影仪窗口
+- Ctrl+O : 打开 PDF 文件
+        </div>
+
+        <h2>6. 技术栈</h2>
+        <ul>
+            <li><strong>GUI 框架：</strong>PyQt6/PySide6</li>
+            <li><strong>PDF 处理：</strong>PyMuPDF (fitz)</li>
+            <li><strong>图像处理：</strong>Pillow (PIL)</li>
+            <li><strong>Python 版本：</strong>3.8+</li>
+        </ul>
+
+        <h2>7. 开发状态</h2>
+        <div class="highlight">
+            <strong>当前阶段：</strong>基础框架已完成 ✅<br>
+            <strong>下一步：</strong>性能优化和测试
+        </div>
+
+        <h2>8. 架构优势</h2>
+        <ul>
+            <li><strong>解耦设计：</strong>通过信号/槽机制实现组件解耦</li>
+            <li><strong>响应式：</strong>异步渲染保持 UI 流畅</li>
+            <li><strong>可扩展：</strong>易于添加新的视图模式</li>
+            <li><strong>可测试：</strong>每个组件可独立测试</li>
+            <li><strong>跨平台：</strong>基于 Qt 的跨平台支持</li>
+        </ul>
+
+        <p style="text-align: center; color: #7f8c8d; margin-top: 40px;">
+            文档生成时间：2024年<br>
+            基于 pdfpc-pyqt6 项目当前架构
+        </p>
+    </div>
+</body>
+</html>
